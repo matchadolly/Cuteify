@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+import os
+import sys
+import json
+import requests
+from bs4 import BeautifulSoup
+from wcwidth import wcwidth
+
+emojicombos = os.environ.get("emojicombos")
+
+# 🎀 Truncates based on display width (in pixels).
+# 🎀 Text is truncated at a word boundary, and "[...]" is appended at the end.
+PIXELS_PER_COLUMN = 8
+def display_columns(s):
+    return sum(wcwidth(c) if wcwidth(c) > 0 else 0 for c in s)
+def truncate_title_by_pixels(text, max_pixels=450):
+    max_columns = max_pixels
+    lines = text.splitlines()
+    first_line = lines[0].rstrip()
+    if len(lines) > 1 or display_columns(first_line) > max_columns:
+        current_cols = 0
+        cut_index = 0
+        for i, ch in enumerate(first_line):
+            w = wcwidth(ch)
+            if w < 0:
+                w = 0
+            current_cols += w
+            if current_cols > max_columns:
+                cut_index = i
+                break
+        else:
+            cut_index = len(first_line)
+        cut_substring = first_line[:cut_index]
+        last_space = cut_substring.rfind(" ")
+        if last_space != -1:
+            trimmed = first_line[:last_space].rstrip()
+        else:
+            trimmed = cut_substring.rstrip()
+        return trimmed + " [...]"
+    else:
+        return first_line
+
+# 🎀 Main script.
+def main():
+    if len(sys.argv) < 2:
+        print(json.dumps({"items": []}))
+        return
+    query = sys.argv[1].strip()
+    url_query = query.replace(" ", "-")
+    url = f"https://emojidb.org/{url_query}"
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+    except Exception as e:
+        url_query = url_query.replace("-emojis", "")
+        print(json.dumps({
+            "items": [{
+                "title": "Error fetching results",
+                "subtitle": str(e),
+                "valid": False
+            },
+                {
+                    "title": "Search using emojicombos.com instead",
+                    "arg": f"{emojicombos} {url_query}",
+                    "autocomplete": f"{emojicombos} {url_query}",
+                }]
+        }))
+        return
+
+    # 🎀 Finds and processes all emoji combo elements.
+    soup = BeautifulSoup(response.text, "html.parser")
+    results = soup.find_all("div", {"class": "emoji"})
+    items = []
+    items.append({
+        "title": "Open in browser",
+        "subtitle": f"Open {url}",
+        "arg": url,
+        "valid": True,
+        "text": {
+            "copy": url,
+            "largetype": url
+        },
+        "mods": {
+            "cmd": {
+                "arg": url,
+                "subtitle": "Open in browser",
+                "valid": True
+            }
+        }
+    })
+    items.append({
+        "title": "Search using emojicombos.com instead",
+        "arg": f"{emojicombos} {url_query}",
+        "autocomplete": f"{emojicombos} {url_query}",
+    })
+    for result in results:
+        combo = result.get_text(separator="\n", strip=True)
+        if combo:
+            items.append({
+                "title": truncate_title_by_pixels(combo, max_pixels=450),
+                "subtitle": "Copy to clipboard",
+                "arg": combo,
+                "valid": True,
+                "text": {
+                    "copy": combo,
+                    "largetype": combo
+                }
+            })
+    print(json.dumps({"items": items}))
+if __name__ == '__main__':
+    main()
