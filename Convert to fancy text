@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+import sys
+import json
+import string
+from wcwidth import wcwidth
+from wcwidth import wcswidth
+
+# 🎀 Sets fonts.
+# 🎀 Each font is defined as a tuple with four elements: (label, lowercase, uppercase, digits).
+# 🎀 If there are no digits defined, then numbers remain unchanged.
+fonts = [
+	("Font 1", "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳", "𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙", "𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗"),
+	("Font 2", "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛", "𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁", None),
+	("Font 3", "𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭", "𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"),
+	("Font 4", "𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯", "𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕", None),
+	("Font 5", "𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓", "𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹", "𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫"),
+	("Font 6", "𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻", "𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡", None),
+	("Font 7", "𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃", "𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩", None),
+	("Font 8", "𝒶𝒷𝒸𝒹𝑒𝒻𝑔𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏", "𝒜𝐵𝒞𝒟𝐸𝐹𝒢𝐻𝐼𝒥𝒦𝐿𝑀𝒩𝒪𝒫𝒬𝑅𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵", None),
+	("Font 9", "𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟", "𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅", None),
+	("Font 10", "𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷", "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ", None),
+	("Font 11", "𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣", "𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉", "𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿"),
+	("Font 12", "𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫", "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ", "𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡"),
+	("Font 13", "🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉", "🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉", None),
+	("Font 14", "🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉", "🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉", None),
+	("Font 15", "🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩", "🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩", "⓿➊➋➌➍➎➏➐➑➒"),
+	("Font 16", "ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ", "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ", "⓪①②③④⑤⑥⑦⑧⑨"),
+	("Superscript", "ᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖᵠʳˢᵗᵘᵛʷˣʸᶻ", "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻ", "⁰¹²³⁴⁵⁶⁷⁸⁹"),
+	("Subscript", "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "₀₁₂₃₄₅₆₇₈₉"),
+]
+
+# 🎀 Maps fonts.
+import string
+def build_mapping(lower_str, upper_str, digits_str=None):
+    mapping = {}
+    # 🎀 Maps a-z.
+    for orig, fancy in zip(string.ascii_lowercase, lower_str):
+        mapping[orig] = fancy
+    # 🎀 Maps A-Z.
+    for orig, fancy in zip(string.ascii_uppercase, upper_str):
+        mapping[orig] = fancy
+    # 🎀 Maps numbers if digits are provided, otherwise leaves them unchanged.
+    if digits_str is not None:
+        for orig, fancy in zip("0123456789", digits_str):
+            mapping[orig] = fancy
+    return mapping
+
+# 🎀 Transforms input using the mapping.
+# 🎀 Characters that are not mapped remain unchanged.
+def fancy_transform(text, mapping):
+    return "".join(mapping.get(ch, ch) for ch in text)
+
+# 🎀 Truncates based on display width (in pixels).
+# 🎀 Text is truncated at a word boundary, and "[...]" is appended at the end.
+PIXELS_PER_COLUMN = 8
+def display_columns(s):
+    return sum(wcwidth(c) if wcwidth(c) > 0 else 0 for c in s)
+def truncate_title_by_pixels(text, max_pixels=450):
+    max_columns = max_pixels
+    lines = text.splitlines()
+    first_line = lines[0].rstrip()
+    if len(lines) > 1 or display_columns(first_line) > max_columns:
+        current_cols = 0
+        cut_index = 0
+        for i, ch in enumerate(first_line):
+            w = wcwidth(ch)
+            if w < 0:
+                w = 0
+            current_cols += w
+            if current_cols > max_columns:
+                cut_index = i
+                break
+        else:
+            cut_index = len(first_line)
+        cut_substring = first_line[:cut_index]
+        last_space = cut_substring.rfind(" ")
+        if last_space != -1:
+            trimmed = first_line[:last_space].rstrip()
+        else:
+            trimmed = cut_substring.rstrip()
+        return trimmed + " [...]"
+    else:
+        return first_line
+
+# 🎀 Main script.
+def main():
+    if len(sys.argv) < 2:
+        print(json.dumps({"items": []}))
+        return
+    plain_text = sys.argv[1]
+    items = []
+    for label, lower_fancy, upper_fancy, digits_fancy in fonts:
+        mapping = build_mapping(lower_fancy, upper_fancy, digits_fancy)
+        fancy_text = fancy_transform(plain_text, mapping)
+        title = truncate_title_by_pixels(fancy_text, max_pixels=450)
+        items.append({
+            "title": title,
+            "subtitle": label,
+            "arg": fancy_text,
+            "valid": True,
+            "text": {
+                "copy": fancy_text,
+                "largetype": fancy_text
+            }
+        })
+    print(json.dumps({"items": items}))
+if __name__ == '__main__':
+    main()
