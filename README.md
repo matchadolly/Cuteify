@@ -16,9 +16,9 @@ The workflow will not be able to run without the required libraries installed in
 4. You are ALL SET!!
 
 ## Usage
-### Searching [emojicombos.com](https://github.com/matchadolly/Cuteify/blob/c826a73bb9d45b6a5497d11974a7d25c3a2a8b63/Search%20emojicombos.com) and [emojidb.org](https://github.com/matchadolly/Cuteify/blob/c826a73bb9d45b6a5497d11974a7d25c3a2a8b63/Search%20emojidb.org)
+### Searching [emojicombos.com](https://github.com/matchadolly/Cuteify/blob/main/Search%20emojicombos.com) and [emojidb.org](https://github.com/matchadolly/Cuteify/blob/main/Search%20emojidb.org)
 Type your chosen keyword followed by your search query, e.g. "k1 sparkle". The kaomojis will be pulled in the same order that they appear on the website, i.e. the most popular options will be listed first. The first result will give you the option to open the query in your browser directly if you for whatever reason want to search for the kaomoji on the original website. The second result will give you the option to search for the query with the alternative website, e.g. if you are searching with emojicombos.com, it will give you the option to search with emojidb.org, just in case you find the results from one website inadequate. The other result will list the kaomjis. Selecting a result will copy the kaomoji to your clipboard. If the kaomoji is truncated, or if you simply want to take a closer look at it, focus the result then press ⌘L to display it fully in large type.
-### [Convert to fancy text](https://github.com/matchadolly/Cuteify/blob/c826a73bb9d45b6a5497d11974a7d25c3a2a8b63/Convert%20to%20fancy%20text)
+### [Convert to fancy text](https://github.com/matchadolly/Cuteify/blob/main/Convert%20to%20fancy%20text)
 Type your chosen keyword followed by the text you'd like to make pretty, e.g. "ff The quick brown fox". The results will display your text in different fonts. Selecting a result will copy the converted text to your clipboard.
 
 ## Credits
